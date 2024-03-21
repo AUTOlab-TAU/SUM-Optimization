@@ -1,1 +1,1 @@
-This repository currently holds utility scripts for converting Jerusalem Living Lab GIS data as well as forks of open-source transportation simulation and analysis packages under consideration for use with the new optimization/control framework.
+This repository will the SUM optimization/control framework, the simulation and analysis packages it calls upon, and utilities and tools for converting living lab data into the required input formats.
