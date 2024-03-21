@@ -1,1 +1,1 @@
-This repository will the SUM optimization/control framework, the simulation and analysis packages it calls upon, and utilities and tools for converting living lab data into the required input formats.
+This repository holds the SUM optimization/control framework, the simulation and analysis packages it calls upon, and utilities for converting living lab data into the required input formats.
