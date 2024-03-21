@@ -1,18 +1,19 @@
 # TO CREATE HIGH RESOLUTION DEMAND BASED ON O-D MATRIX OF TRAFFIC ANALYSIS ZONES (TAZs)
 #
-# This SQLITE proof of concept is much faster than pure python solutions
+# WARNING: Under development!
+#
+# This SQLITE proof of concept is faster than pure python solutions
 # in part because the data are already "loaded". Spatialite may also
 # leverage spatial indexes better?
 #
 # Prereqs:  (1) spatialite is installed
-#           (2) spatialite database with (a) polygon layer (traffic analysis zones)
-#                                        (b) line layer (streets)
+#           (2) spatialite database with (a) polygon layer called "taz" (traffic analysis zones)
+#                                        (b) line layer called "streets"
 #
 # NOTE: QGIS can export even large layers to spatialite databases
 # quickly and handles Hebrew characters well. Spatialite was selected over
 # PostgreSQL's PostGIS for the convenience of having all data in a single
 # file.
-
 
 import sqlite3
 import random
@@ -71,7 +72,12 @@ def drop_points_table(conn,cursor,table_name):
 
 
 def create_points_table(cursor,table_name):
-    query = f"CREATE TABLE IF NOT EXISTS {table_name} (id INTEGER PRIMARY KEY AUTOINCREMENT,X DOUBLE,Y DOUBLE);"
+
+    # Visualizing trips with traditional GIS tools is sometimes easier if origin and destination are
+    # stored as separate rows (not a single row with two spatial geoms). "part" is either origin
+    # or destination with a shared "id".
+
+    query = f"CREATE TABLE IF NOT EXISTS {table_name} (id INTEGER, request_time FLOAT, part TEXT, x DOUBLE, y DOUBLE, UNIQUE(id, part));"
     cursor.execute(query)
     query = f"SELECT AddGeometryColumn({table_name}, 'geometry', 2039, 'POINT', 'XY');"
     try:
@@ -84,8 +90,36 @@ def create_points_table(cursor,table_name):
     except sqlite3.OperationalError as e:
         print(f"CreateSpatialIndex() skipped: {e}")
 
+def create_point_xy_taz(cursor, taz_num):
+    taz_geom = get_selected_taz(cursor,taz_num)
+    streets = get_streets_in_taz(cursor,taz_geom)    
+    points = []
+    # Randomly select street
+    street_id, street_geom = random.choice(streets)
+    point_geom = create_point_on_street(cursor,street_geom,taz_geom)
+    if point_geom:
+        # Extract X and Y from the point geometry
+        cursor.execute("""
+            SELECT ST_X(ST_GeomFromText(?,2039)), ST_Y(ST_GeomFromText(?,2039))
+        """, (point_geom, point_geom))
+        x, y = cursor.fetchone()
+        return x, y, point_geom
+    else:
+        raise Exception(f"Failed to create point in TAZ {taz_num} on street {street_geom}")
 
-def create_points_within_taz(db_path, taz_num, num_points):
+def insert_point_in_table(request_time,part,x,y,geom):
+    pass
+
+    
+    # # Insert the point along with X and Y
+    #     cursor.execute("""
+    #         INSERT INTO taz_points (X, Y, geometry) VALUES (?, ?, ST_GeomFromText(?,2039)) 
+    #     """, (x, y, point_geom)) # if SRID e.g. 2039 is not specified here it defaults to zero and causes problems
+
+
+
+
+def create_point_within_taz(db_path, taz_num, num_points=1):
     conn, cursor = create_sqlite_cursor(db_path)
     taz_geom = get_selected_taz(cursor,taz_num)
     streets = get_streets_in_taz(cursor,taz_geom)    
