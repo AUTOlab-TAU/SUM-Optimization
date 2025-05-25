@@ -1,6 +1,4 @@
 [submodule "FleetPy"]
 	path = FleetPy
 	url = https://github.com/TUM-VT/FleetPy.git
-[submodule "DemandGenerator"]
-	path = DemandGenerator
-	url = https://github.com/AUTOlab-TAU/demand_generator.git
+
