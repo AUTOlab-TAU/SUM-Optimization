@@ -1,0 +1,81 @@
+{
+    "scenario_parameters": {
+        "network_name": "jerusalem_osm",
+        "demand_name": "jerusalem_demand",
+        "random_seed": 0,
+        "start_time": 25200,
+        "end_time": 32400,
+        "time_step": 60,
+        "sim_env": "BatchOfferSimulation",
+        "network_type": "NetworkBasicWithStoreCpp",
+        "op_module": "RidePoolingBatchAssignmentFleetcontrol",
+        "op_rp_batch_optimizer": "AlonsoMora",
+        "op_init_veh_distribution": "neighborhood_focus.csv",
+        "route_output_flag": true,
+        "replay_flag": true,
+        "nr_mod_operators": 1,
+        "user_max_decision_time": 30,
+        "op_min_wait_time": 0,
+        "op_const_boarding_time": 30,
+        "op_add_boarding_time": 0,
+        "op_base_fare": 0,
+        "op_distance_fare": 0,
+        "op_time_fare": 0,
+        "op_min_standard_fare": 0,
+        "op_repo_method": "AlonsoMoraRepositioning",
+        "op_repo_horizons": 60,
+        "op_vr_control_func_dict": {
+            "func_key": "distance_and_user_times_with_walk",
+            "vot": 0.45
+        },
+        "op_reoptimisation_timestep": 60,
+        "study_name": "jerusalem",
+        "n_cpu_per_sim": 1,
+        "evaluate": 1,
+        "log_level": "info",
+        "keep_old": false,
+        "scenario_name": "SUM_i000_r000",
+        "op_fleet_composition": {
+            "jerusalem_petrol_van_vehtype": 5
+        },
+        "rq_type": "BasicRequest",
+        "rq_file": "i000_r000_nsm.csv",
+        "op_max_wait_time": 300,
+        "op_max_detour_time_factor": 100
+    },
+    "list_operator_attributes": [
+        {
+            "op_module": "RidePoolingBatchAssignmentFleetcontrol",
+            "op_rp_batch_optimizer": "AlonsoMora",
+            "op_init_veh_distribution": "neighborhood_focus.csv",
+            "op_min_wait_time": 0,
+            "op_const_boarding_time": 30,
+            "op_add_boarding_time": 0,
+            "op_base_fare": 0,
+            "op_distance_fare": 0,
+            "op_time_fare": 0,
+            "op_min_standard_fare": 0,
+            "op_repo_method": "AlonsoMoraRepositioning",
+            "op_repo_horizons": 60,
+            "op_vr_control_func_dict": {
+                "func_key": "distance_and_user_times_with_walk",
+                "vot": 0.45
+            },
+            "op_reoptimisation_timestep": 60,
+            "op_fleet_composition": {
+                "jerusalem_petrol_van_vehtype": 5
+            },
+            "op_max_wait_time": 300,
+            "op_max_detour_time_factor": 100
+        }
+    ],
+    "directories": {
+        "main": "D:\\users\\davideps\\Jerusalem\\python\\FleetPy",
+        "data": "D:\\users\\davideps\\Jerusalem\\python\\FleetPy\\data",
+        "output": "D:\\users\\davideps\\Jerusalem\\python\\FleetPy\\studies\\jerusalem\\results\\SUM_i000_r000",
+        "network": "D:\\users\\davideps\\Jerusalem\\python\\FleetPy\\data\\networks\\jerusalem_osm",
+        "vehicles": "D:\\users\\davideps\\Jerusalem\\python\\FleetPy\\data\\vehicles",
+        "fleetctrl": "D:\\users\\davideps\\Jerusalem\\python\\FleetPy\\data\\fleetctrl",
+        "demand": "D:\\users\\davideps\\Jerusalem\\python\\FleetPy\\data\\demand\\jerusalem_demand\\matched\\jerusalem_osm"
+    }
+}

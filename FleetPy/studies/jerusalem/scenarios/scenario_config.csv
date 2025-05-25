@@ -1,0 +1,3 @@
+scenario_name,op_fleet_composition,rq_type,rq_file,op_max_wait_time,op_max_detour_time_factor
+SUM_i001_r000,jerusalem_petrol_van_vehtype:5,BasicRequest,i001_r000_nsm.csv,300,100
+SUM_i001_r001,jerusalem_petrol_van_vehtype:5,BasicRequest,i001_r001_nsm.csv,300,100
