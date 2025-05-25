@@ -1,6 +1,3 @@
-[submodule "ExMAS"]
-	path = ExMAS
-	url = https://github.com/RafalKucharskiPK/ExMAS.git
 [submodule "FleetPy"]
 	path = FleetPy
 	url = https://github.com/TUM-VT/FleetPy.git
