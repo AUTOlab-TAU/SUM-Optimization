@@ -1,1 +1,4 @@
-This repository holds the SUM optimization/control framework, the simulation and analysis packages it calls upon, and utilities for converting living lab data into the required input formats.
+This repository holds the SUM Simulation-Optimization framework version referred to in the Task 2.2 Deliverable. It depends upon the older version of FleetPy included. At the end of May 2025, development will proceed in the "main" branch using FleetPy referenced as a submodule. 
+
+
+
