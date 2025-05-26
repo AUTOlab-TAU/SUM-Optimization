@@ -1,3 +1,8 @@
-WARNING: This repository has not been updated recently and changes will be pushed in May 2025 including folder restructuring. 
+This repository holds the SUM optimization/control framework and utilities for converting local data into the required input formats.
 
-This repository holds the SUM optimization/control framework, the simulation and analysis packages it calls upon, and utilities for converting living lab data into the required input formats.
+The *Main* branch will become the development branch starting in June 2025 with these goals: adding new features, easier to use, and staying current with advances in [FleetPy](https://github.com/TUM-VT/FleetPy). 
+
+The *T2.2-Deliverable* branch contains the code described in the May 2025 report for the SUM Project.
+
+
+
