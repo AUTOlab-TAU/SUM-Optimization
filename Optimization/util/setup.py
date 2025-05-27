@@ -1,5 +1,19 @@
 import pandas as pd
 from typing import Dict, List, Union, Any
+from pathlib import Path
+import sys
+
+# Add project root to Python path to find config
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+from config import (
+    WORK_PATH,
+    RESULTS_PATH,
+    FLEETPY_ROOT,
+    FLEETPY_DEMAND,
+    REQUESTS_FILE
+)
 
 class StatGroup:
     """Maintains running statistics with exponential smoothing for simulation parameters.
@@ -96,17 +110,9 @@ class StatGroup:
                 temp.append({'iter': i, 'stat': stat, 'value': value, 'smoothed': smoothed, 'pval': pval})
         return pd.DataFrame(temp)
 
-# Paths for data and configuration files
-basepath: str = "D:\\users\\davideps\\Jerusalem"
-workpath: str = f"{basepath}\\python\\temp_workspace"
-result_path: str = f"{basepath}\\python\\config_results"
-fleetpy_path: str = f"{basepath}\\python\\FleetPy"
-fleetpy_demand_path: str = f"{fleetpy_path}\\data\\demand\\jerusalem_demand\\matched\\jerusalem_osm"
-requestsfilepath: str = f"{basepath}\\SUM-Optimization\JerusalemData\demand\Processed\\requests_fleetpy_nodes_with_nsm_7am9am_scale15x_focus_area.csv"
-requestfile_ratio: float = 15.10924  # 2.0=twice the Deccell volume
-
 # Simulation parameters
-demand_ratio: float = 1.252  # 1.0 = original Decell volume
+requestfile_ratio: float = 15.10924  # 2.0=twice the Deccell volume
+demand_ratio: float = 0.25 #1.252 matches survey estimate  # 1.0 = original Decell volume
 weight_alpha: float = 0.25  # Smoothing weight for statistics
 
 # Cost parameters
@@ -148,6 +154,7 @@ nsmstats: Dict[str, float] = {
     "nsm_car_time_ratio": 1.5,  # travel time ratio compared to car
     "nsm_wait_time": 150,  # initial wait time estimate
     "nsm_travel_time": 375,  # initial travel time estimate
+    "nsm_total_time": 525,  # initial total time (wait_time + travel_time)
     "car_time": 250 # initial car time estimate
 }
 nsmstats: StatGroup = StatGroup(nsmstats, weight_alpha)

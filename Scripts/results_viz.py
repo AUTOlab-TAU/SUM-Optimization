@@ -1,15 +1,25 @@
 import pandas as pd
 from plotnine import ggplot, aes, geom_line, geom_point, scale_shape_manual, theme_minimal, scale_linetype_manual, scale_size_manual, theme, element_rect, labs, element_text, geom_text
+from pathlib import Path
+import sys
+
+# Add project root to Python path to find config
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from config import RESULTS_PATH
+
 make_figures = True
 
-basepath = 'D:\\users\\davideps\\Jerusalem\\python\\config_results'
-result_path = 'D:\\users\\davideps\\Jerusalem\\python\\config_results\\viz_2025_05_20'
+# Create visualization directory
+viz_dir = RESULTS_PATH / "viz_2025_05_20"
+viz_dir.mkdir(exist_ok=True)
 
-for config_name in ["20_2"]:
+for config_name in ["5_2"]:
     # Read data from CSV files
-    choicestats_df = pd.read_csv(f'{basepath}\\{config_name}_choicestats.csv')
-    nsmstats_df = pd.read_csv(f'{basepath}\\{config_name}_nsmstats.csv')
-    modesplit_df = pd.read_csv(f'{basepath}\\{config_name}_modesplit.csv')
+    choicestats_df = pd.read_csv(RESULTS_PATH / f"{config_name}_choicestats.csv")
+    nsmstats_df = pd.read_csv(RESULTS_PATH / f"{config_name}_nsmstats.csv")
+    modesplit_df = pd.read_csv(RESULTS_PATH / f"{config_name}_modesplit.csv")
 
     # Print column names for verification
     print(f"\nColumns in {config_name} choicestats_df:", choicestats_df.columns.tolist())
@@ -79,7 +89,7 @@ for config_name in ["20_2"]:
         + white_theme
     )
     # Save the plot to a PNG file
-    ASCplot.save(filename=f"{result_path}\\{config_name}_ASC.png", dpi=300, height=6, width=8, units='in')
+    ASCplot.save(filename=str(viz_dir / f"{config_name}_ASC.png"), dpi=300, height=6, width=8, units='in')
 
     BVALplot = (
         ggplot(bval_df, aes(x='iter', y='smoothed', group='stat', color='stat'))
@@ -91,7 +101,7 @@ for config_name in ["20_2"]:
         + white_theme
     )
     # Save the plot to a PNG file
-    BVALplot.save(filename=f"{result_path}\\{config_name}_BVAL.png", dpi=300, height=6, width=8, units='in')
+    BVALplot.save(filename=str(viz_dir / f"{config_name}_BVAL.png"), dpi=300, height=6, width=8, units='in')
 
     NSMplot = (
         ggplot(nsm_df, aes(x='iter', y='smoothed', group='stat', color='stat'))
@@ -103,7 +113,7 @@ for config_name in ["20_2"]:
         + white_theme
     )
     # Save the plot to a PNG file
-    NSMplot.save(filename=f"{result_path}\\{config_name}_NSM.png", dpi=300, height=6, width=8, units='in')
+    NSMplot.save(filename=str(viz_dir / f"{config_name}_NSM.png"), dpi=300, height=6, width=8, units='in')
 
     WAITplot = (
         ggplot(wait_df, aes(x='iter', y='smoothed', group='stat', color='stat'))
@@ -115,7 +125,7 @@ for config_name in ["20_2"]:
         + white_theme
     )
     # Save the plot to a PNG file
-    WAITplot.save(filename=f"{result_path}\\{config_name}_WAIT.png", dpi=300, height=6, width=8, units='in')
+    WAITplot.save(filename=str(viz_dir / f"{config_name}_WAIT.png"), dpi=300, height=6, width=8, units='in')
 
     mode_plot = (
         ggplot(modesplit_df, aes(x='iter', y='ratio', group='mode', color='mode'))
@@ -127,5 +137,5 @@ for config_name in ["20_2"]:
         + white_theme
     )
     # Save the plot to a PNG file
-    mode_plot.save(filename=f"{result_path}\\{config_name}_MODESPLIT.png", dpi=300, height=6, width=8, units='in')
+    mode_plot.save(filename=str(viz_dir / f"{config_name}_MODESPLIT.png"), dpi=300, height=6, width=8, units='in')
 

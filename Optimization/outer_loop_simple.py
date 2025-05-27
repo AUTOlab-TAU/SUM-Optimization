@@ -18,29 +18,30 @@
 #                           since the delta is 0.09%, the inner loop will stop and the threshold_triggered flag
 #                           will be set to true in the configuration results CSV.
 
-
-
-
-
 import sys
 import json
 import subprocess
-import os
-from util.setup import result_path
+from pathlib import Path
+
+# Add project root to Python path to find config
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from config import OPTIMIZATION_DIR, RESULTS_PATH
 from util.util import get_config_results
 
-script_dir = os.path.dirname(os.path.abspath(__file__))  # directory of THIS script (inner_loop.py must be in same)
+# inner_loop.py must be in same directory as this script
+INNER_LOOP_PATH = OPTIMIZATION_DIR / "inner_loop.py"
 
 nsmconfig = {
     "config_name":"PLACEHOLDER", # used to name files
-    "op_max_wait_time":300,     # 300 = 5min lead time , 420 = 7min
-    "op_max_detour_time_factor":100,
+    "op_max_wait_time":60,     # 300 = 5min lead time , 420 = 7min
+    "op_max_detour_time_factor":100, #100
     "op_fleet_composition":"jerusalem_petrol_van_vehtype:20",
     "nsm_cost":8,# if this is less than or equal to PT cost of 6, NSM requests will soar, requiring higher maxiter and far more time per iteration
     "maxiter":25, # if stop_loop_threshold is not reached, how many iterations to run? depends on reasonableness of initial settings in util\setup.py
-    "reps":2, # how many repetitions per configuration? start low. probably good to keep below #CPUs
-    "stop_loop_threshold":0.25, #0.015, #absolute difference in percentage points in NSM usage between iterations
-    "make_figures":True # takes time but useful for debugging
+    "reps":10, # how many repetitions per configuration? start low. probably good to keep below #CPUs
+    "stop_loop_threshold":0.020, #0.015, #absolute difference in percentage points in NSM usage between iterations
     } 
 
 for fleet_size in [5]:
@@ -55,8 +56,8 @@ for fleet_size in [5]:
         
         # run the inner loop
         print(f"Outer loop calling inner loop for configuration: {config_name}")
-        command = [sys.executable, f'{script_dir}\\inner_loop.py','--config',nsmconfig_text]
-        this_process = subprocess.run(command,capture_output=False, text=True) # write inner_loop text to screen
+        command = [sys.executable, str(INNER_LOOP_PATH), '--config', nsmconfig_text]
+        this_process = subprocess.run(command, capture_output=False, text=True) # write inner_loop text to screen
         #this_process = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # ignore inner_loop text
 
         # get results

@@ -14,10 +14,23 @@ from util.dcacalc import *
 from util.util import *
 from util.setup import *
 from util.sample import *
-# from plotnine import ggplot, aes, geom_line, geom_point, scale_shape_manual, theme_minimal, scale_linetype_manual, scale_size_manual
 from datetime import datetime
 import argparse
 import json
+from pathlib import Path
+
+# Add project root to Python path to find config
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from config import (
+    FLEETPY_ROOT,
+    FLEETPY_SCENARIOS,
+    FLEETPY_DEMAND,
+    WORK_PATH,
+    RESULTS_PATH,
+    get_iteration_path
+)
 
 # GET THE CONFIGURATION FROM COMMANDLINE --config STRING
 parser = argparse.ArgumentParser()
@@ -44,7 +57,12 @@ sim_end_time = math.ceil(max(request_pool["rq_time"]))
 print(f"Starting SUM Simulation-Optimization Framework at {framework_start_time_txt}")
 
 # WRITE FLEETPY CONSTANT CONFIG (DOES NOT CHANGE DURING INNER LOOP)
-write_fleetpy_constant_config_file(fr"{fleetpy_path}\studies\jerusalem\scenarios\constant_config.csv",fleetpy_constant_config,sim_start_time,sim_end_time)
+write_fleetpy_constant_config_file(
+    FLEETPY_SCENARIOS / "constant_config.csv",
+    fleetpy_constant_config,
+    sim_start_time,
+    sim_end_time
+)
 
 # INNER LOOP BEGINS HERE
 last_iter = num_iterations # if interloop threshold is triggered, last_iter = this iteration
@@ -100,13 +118,13 @@ for i in range(num_iterations):
         df['served'] = -1 # default value
 
         #save all travelers
-        df.to_csv(f"{workpath}\\i{i:03}_r{r:03}_all_presim_demand.csv",index=False)
+        df.to_csv(get_iteration_path(i, r, "all_presim_demand_").with_suffix(".csv"), index=False)
         requests.append(df)
         iter_demand_modesplit.append(get_mode_stats(df))
 
         #save nsm demand
         rqfile = f"i{i:03}_r{r:03}_nsm.csv"
-        df[df["choice"]==4].to_csv(f"{fleetpy_demand_path}\\{rqfile}",index=False)
+        df[df["choice"]==4].to_csv(FLEETPY_DEMAND / rqfile, index=False)
 
     demand_end_time = datetime.now()
     demand_dur = demand_end_time - demand_start_time
@@ -115,8 +133,14 @@ for i in range(num_iterations):
 
     # RUN FLEETPY ON REQUESTS
     # overwrite scenario file with new scenario name & demand source file
-    write_fleetpy_scenario_config_file(fr"{fleetpy_path}\studies\jerusalem\scenarios\scenario_config.csv",i,num_replications,scenario_basename,fleetpy_params) # inner_loop_args)
-    command = [sys.executable, fr"{fleetpy_path}\run_private_jerusalem.py"]
+    write_fleetpy_scenario_config_file(
+        FLEETPY_SCENARIOS / "scenario_config.csv",
+        i,
+        num_replications,
+        scenario_basename,
+        fleetpy_params
+    )
+    command = [sys.executable, str(FLEETPY_ROOT / "run_private_jerusalem.py")]
     simulation_start_time = datetime.now()
     result = subprocess.run(command,capture_output=False, text=True) # change to True for print statements from simulations
     # Print the output and any error messages
@@ -174,7 +198,7 @@ for i in range(num_iterations):
         df = recalc_nsm_util_and_exp(df,choicestats.get_all_current_smooth(),nsmstats.get_all_current_smooth())
         df = calc_all_probs(df,modes)
 
-        #df.to_csv(fr"{fleetpy_path}\data\demand\jerusalem_demand\matched\jerusalem_osm\i{i:03}_r{r:03}_all_intermediate_demand.csv",index=False)
+        #df.to_csv(FLEETPY_DEMAND / f"i{i:03}_r{r:03}_all_intermediate_demand.csv", index=False)
 
         # # give some NSM users (those who received service) a chance to switch
         mask = (df['served'] == 1) #& (np.random.rand(len(df)) < user_can_switch_rate) # these users offered chance to switch
@@ -191,7 +215,7 @@ for i in range(num_iterations):
         print("AFTER NON-USERS CAN SWITCH")
         print_mode_stats(df)
 
-        df.to_csv(fr"{workpath}\\i{i:03}_r{r:03}_all_postsim_demand.csv",index=False)
+        df.to_csv(get_iteration_path(i, r, "all_postsim_demand_").with_suffix(".csv"), index=False)
 
 
     update_end_time = datetime.now()
@@ -346,7 +370,7 @@ for mode in modestats["ratio"]:
     final_mode_split[mode] = modestats["ratio"][mode][i] * 100 # modestats all raw, never smoothed
 
 # Open the file and write the header + data
-with open(f"{result_path}\\{config_name}_results.csv", mode="w", newline="") as file:
+with open(RESULTS_PATH / f"{config_name}_results.csv", mode="w", newline="") as file:
     writer = csv.writer(file)
 
     # Write the header
@@ -365,9 +389,9 @@ with open(f"{result_path}\\{config_name}_results.csv", mode="w", newline="") as 
 
 # Create results df
 nsmstats_df = nsmstats.to_ggplot()
-nsmstats_df.to_csv(f"{result_path}\\{config_name}_nsmstats.csv",index=False)
+nsmstats_df.to_csv(RESULTS_PATH / f"{config_name}_nsmstats.csv",index=False)
 choicestats_df = choicestats.to_ggplot()
-choicestats_df.to_csv(rf"{result_path}\\{config_name}_choicestats.csv",index=False)
+choicestats_df.to_csv(RESULTS_PATH / f"{config_name}_choicestats.csv",index=False)
 
 # do same for modesplit, which is not a StatsGroup
 temp = []
@@ -375,86 +399,5 @@ for mode in modestats["ratio"]:
     for i, val in enumerate(modestats['ratio'][mode]):
         temp.append({'iter': i, 'mode': mode, 'ratio': val})
 modesplit_df = pd.DataFrame(temp)
-modesplit_df.to_csv(rf"{result_path}\\{config_name}_modesplit.csv",index=False)
+modesplit_df.to_csv(RESULTS_PATH / f"{config_name}_modesplit.csv",index=False)
 modesplit_df['mode'] = modesplit_df['mode'].astype('category')
-
-
-# if make_figures:
-
-#     # create more specific dfs for plotting
-#     ASC_df = choicestats_df[choicestats_df['stat'].isin(['ASC_WALK','ASC_BIKE','ASC_CAR','ASC_PT','ASC_NSM'])]
-#     bval_df = choicestats_df[choicestats_df['stat'].isin(['B_COST','B_TIME','B_RISK'])]
-#     nsm_df = nsmstats_df[nsmstats_df['stat'].isin(['occupancy','service_rate','nsm_car_time_ratio'])]
-#     wait_df = nsmstats_df[nsmstats_df['stat'].isin(['nsm_wait_time'])]
-
-#     # Define line types and sizes for each Stat
-#     line_types = {'ASC_WALK': 'solid', 'ASC_BIKE': 'solid', 'ASC_CAR': 'dotted',
-#                 'ASC_PT': 'dotted', 'ASC_NSM': 'solid', 'B_COST': 'dashdot', 'B_TIME': 'dotted', 'service_rate': 'solid'}
-
-#     line_sizes = {'ASC_WALK': 0.5, 'ASC_BIKE': 0.5, 'ASC_CAR': 0.5,
-#                 'ASC_PT': 0.75, 'ASC_NSM': 3.0, 'B_COST': 0.75, 'B_TIME': 1.0, 'service_rate': 1.5}
-
-#     ASCplot = (
-#         ggplot(ASC_df, aes(x='iter', y='smoothed', group='stat', color='stat'))
-#         + geom_line()  # Add lines for each Stat
-#         + geom_point(aes(shape='pval < 0.05'), size=1.0)  # Use shape to indicate significance
-#         + scale_shape_manual(values={True: 'o', False: 'x'})  # Solid for significant, hollow for non-significant
-#         + theme_minimal()  # Use a minimal theme for better aesthetics
-#     )
-#     # Save the plot to a PNG file
-#     ASCplot.save(filename=f"{result_path}\\{config_name}_ASC.png", dpi=300, height=6, width=8, units='in')
-
-
-#     BVALplot = (
-#         ggplot(bval_df, aes(x='iter', y='smoothed', group='stat', color='stat'))
-#         + geom_line()  # Add lines for each Stat
-#         + geom_point(aes(shape='pval < 0.05'), size=1.0)  # Use shape to indicate significance
-#         + scale_shape_manual(values={True: 'o', False: 'x'})  # Solid for significant, hollow for non-significant
-#         + theme_minimal()  # Use a minimal theme for better aesthetics
-#     )
-#     # Save the plot to a PNG file
-#     BVALplot.save(filename=f"{result_path}\\{config_name}_BVAL.png", dpi=300, height=6, width=8, units='in')
-
-
-
-#     NSMplot = (
-#         ggplot(nsm_df, aes(x='iter', y='smoothed', group='stat', color='stat'))
-#         + geom_line()  # Add lines for each Stat
-#         + geom_point(aes(shape='pval < 0.05'), size=1.0)  # Use shape to indicate significance
-#         + scale_shape_manual(values={True: 'o', False: 'x'})  # Solid for significant, hollow for non-significant
-#         + theme_minimal()  # Use a minimal theme for better aesthetics
-#     )
-#     # Save the plot to a PNG file
-#     NSMplot.save(filename=f"{result_path}\\{config_name}_NSM.png", dpi=300, height=6, width=8, units='in')
-
-
-#     WAITplot = (
-#         ggplot(wait_df, aes(x='iter', y='smoothed', group='stat', color='stat'))
-#         + geom_line()  # Add lines for each Stat
-#         + geom_point(aes(shape='pval < 0.05'), size=1.0)  # Use shape to indicate significance
-#         + scale_shape_manual(values={True: 'o', False: 'x'})  # Solid for significant, hollow for non-significant
-#         + theme_minimal()  # Use a minimal theme for better aesthetics
-#     )
-#     # Save the plot to a PNG file
-#     WAITplot.save(filename=f"{result_path}\\{config_name}_WAIT.png", dpi=300, height=6, width=8, units='in')
-
-#     mode_plot = (
-#         ggplot(modesplit_df, aes(x='iter', y='ratio', group='mode', color='mode'))
-#         + geom_line()  # Add lines for each Stat
-#         + theme_minimal()  # Use a minimal theme for better aesthetics
-#     )
-#     # Save the plot to a PNG file
-#     mode_plot.save(filename=f"{result_path}\\{config_name}_MODESPLIT.png", dpi=300, height=6, width=8, units='in')
-
-
-
-
-
-
-
-
-
-
-
-
-
