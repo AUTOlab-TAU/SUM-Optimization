@@ -3,23 +3,9 @@ import pandas as pd
 from statistics import mean, stdev
 import math
 from typing import Dict, List, Any, Union
-from pathlib import Path
-import sys
-
-# Add project root to Python path to find config
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
-
-from config import (
-    WORK_PATH,
-    FLEETPY_ROOT,
-    FLEETPY_SCENARIOS,
-    FLEETPY_DEMAND,
-    FLEETPY_RESULTS,
-    FLEETPY_VEHICLES,
-    get_iteration_path
-)
 from .dcacalc import reasign_unserved_requests
+from .setup import workpath, fleetpy_path
+
 
 def get_fleetpy_params(inner_loop_config: Dict[str, Any]) -> Dict[str, Any]:
     """Extract FleetPy-specific parameters from inner loop configuration.
@@ -93,7 +79,7 @@ fleetpy_constant_config = {
         "network_type":"NetworkBasicWithStoreCpp",
         "op_module": "RidePoolingBatchAssignmentFleetcontrol", #"PoolingIRSOnly" #"PoolingIRSAssignmentBatchOptimization"
         "op_rp_batch_optimizer":"AlonsoMora",
-        "op_init_veh_distribution": "neighborhood_focus.csv",
+        "op_init_veh_distribution":"neighborhood_focus.csv",
         "route_output_flag":"TRUE",
         "replay_flag":"TRUE",
         "nr_mod_operators":1,
@@ -162,8 +148,7 @@ def get_fleetpy_simdata_allreps(i: int, num_reps: int, basename: str) -> List[pd
     result = []
     for r in range(num_reps):
         print(f"Reading simulation data for iter {i} rep {r}")
-        results_file = FLEETPY_RESULTS / f"{basename}_i{i:03}_r{r:03}" / "standard_eval.csv"
-        df = pd.read_csv(results_file, skiprows=1, header=None) #ignores column names, permits numerical indexing of columns
+        df = pd.read_csv(f"{fleetpy_path}\\studies\\jerusalem\\results\\{basename}_i{i:03}_r{r:03}\\standard_eval.csv",skiprows=1,header=None) #ignores column names, permits numerical indexing of columns
         result.append(df)
     return result
 
@@ -217,8 +202,8 @@ def update_requests_fleetpy_users_served(i: int, r: int, scenario_basename: str)
     """
     # key = fleetpy column name
     # value = simulation-optimization framework column name
-    alltrav = pd.read_csv(get_iteration_path(i, r, "all_presim_demand_").with_suffix(".csv"))
-    requests = pd.read_csv(FLEETPY_RESULTS / f"{scenario_basename}_i{i:03}_r{r:03}" / "1_user-stats.csv")
+    alltrav = pd.read_csv(f"{workpath}\\i{i:03}_r{r:03}_all_presim_demand.csv")
+    requests = pd.read_csv(f"{fleetpy_path}\\studies\\jerusalem\\results\\{scenario_basename}_i{i:03}_r{r:03}\\1_user-stats.csv")
     results = requests.dropna(subset=["pickup_time"]).copy() # requests FleetPy served
     results.loc[:, "nsm_wait_time"] = results.loc[:,"pickup_time"] - results.loc[:,"rq_time"]
     results.loc[:, "nsm_travel_time"] = results.loc[:,"dropoff_time"] - results.loc[:,"pickup_time"]
@@ -263,66 +248,76 @@ def update_fleetpy_unservedchoose(df: pd.DataFrame) -> pd.DataFrame:
     """Update mode choices for unserved NSM requests.
     
     Reassigns mode choices for travelers who requested NSM service but were not served,
-    based on their original utilities for alternative modes.
+    based on their original mode choice probabilities (excluding NSM).
     
     Args:
-        df: DataFrame containing traveler data with mode choices and service status
+        df: DataFrame containing traveler data with service outcomes
     
     Returns:
         DataFrame with updated mode choices for unserved NSM requests
     """
-    # Create a copy to avoid modifying the original
-    df = df.copy()
-    
-    # Identify unserved NSM requests
-    unserved_mask = (df["choice"] == 4) & (df["served"] == 0)
-    
-    # Apply the reassignment function only to unserved NSM requests
-    df.loc[unserved_mask, "choice"] = df[unserved_mask].apply(reasign_unserved_requests, axis=1)
-    
+    # unserved NSM users must choose other modes based on initial probabilities but without NSM
+    # if they didn't chose NSM, "served" = -1
+    df["modified"] = 0 # initialize for everyone
+    df["prevchoice"] = df["choice"] # initialize for everyone
+    df.loc[df["served"] == 0, "choice"] = df[df["served"] == 0].apply(reasign_unserved_requests,axis=1)
+    df.loc[df["served"] == 0, "modified"] = 1
+    df["unserved"] = df["modified"]
     return df
-
-
+        
 def calc_userstats_allreps(dflist: List[pd.DataFrame]) -> Dict[str, Dict[str, float]]:
-    """Calculate user statistics across all replications.
+    """Calculate service performance statistics across all replications.
     
-    Computes mean and standard deviation of various user metrics like wait times
-    and travel times across all replications of the simulation.
+    Computes mean and standard deviation of key service metrics:
+    - NSM wait time
+    - NSM travel time
+    - Car travel time
+    - Ratio of NSM total time to car time
     
     Args:
-        dflist: List of DataFrames containing user data for each replication
+        dflist: List of DataFrames containing updated traveler data for each replication
     
     Returns:
         Nested dictionary with structure:
             {metric_name: {'mean': float, 'stdev': float}}
-        For each user metric
+        For each service metric
     """
+    # stores mean from each simulation
+    data = {}
+    data["nsm_wait_time"] = []
+    data["nsm_travel_time"] = []
+    data["car_time"] = []
+    data["nsm_car_time_ratio"] = []
+
+    # stores mean and stdev of means (should be weighted by # requests served?)
     result = {}
-    # get mean values for each rep
+    result["nsm_wait_time"] = {}
+    result["nsm_travel_time"] = {}
+    result["car_time"] = {}
+    result["nsm_car_time_ratio"] = {}
+
     for df in dflist:
-        served_mask = df["served"]==1
-        served_df = df[served_mask]
-        if len(served_df) > 0:
-            nsm_wait_time = served_df["nsm_wait_time"].mean()
-            nsm_travel_time = served_df["nsm_travel_time"].mean()
-            nsm_total_time = served_df["nsm_total_time"].mean()
-            car_time = served_df["car_time"].mean()
-            nsm_car_time_ratio = nsm_travel_time/car_time
-            for stat in ["nsm_wait_time","nsm_travel_time","nsm_total_time","car_time","nsm_car_time_ratio"]:
-                if stat not in result:
-                    result[stat] = {}
-                    result[stat]["values"] = []
-                result[stat]["values"].append(eval(stat))
-    # compute mean & stdev over reps
-    for stat in result:
-        valuelist = result[stat]["values"]
-        result[stat]["mean"] = mean(valuelist)
-        if len(valuelist) >= 2 and all(math.isfinite(x) for x in valuelist):
-            result[stat]["stdev"] = stdev(valuelist)
+        nsm_df = df.loc[df["served"] == 1, ["nsm_wait_time", "nsm_travel_time","car_time"]].dropna()
+        nsm_wait_time = mean(nsm_df["nsm_wait_time"])
+        data["nsm_wait_time"].append(nsm_wait_time)       
+        nsm_travel_time = mean(nsm_df["nsm_travel_time"])
+        data["nsm_travel_time"].append(nsm_travel_time)
+        car_time = mean(nsm_df["car_time"])
+        data["car_time"].append(car_time)
+        data["nsm_car_time_ratio"].append((nsm_wait_time + nsm_travel_time) / car_time) #CORRECT
+        #data["nsm_car_time_ratio"].append(car_time / (nsm_wait_time + nsm_travel_time)) #WRONG!
+
+
+    for key in ["nsm_wait_time","nsm_travel_time","car_time","nsm_car_time_ratio"]:
+        valuelist = data[key]
+        result[key]['mean'] = mean(valuelist)
+        if len(valuelist) > 1:
+            result[key]["stdev"] = stdev(valuelist)
         else:
             print("there is no replication so stdev cannot be computed. setting to zero.")
-            result[stat]["stdev"] = 0
-    return result
+            result[key]["stdev"] = 0
+
+    return result                    
 
 
 

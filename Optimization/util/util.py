@@ -1,14 +1,7 @@
 import pandas as pd
 import csv
 from typing import Dict, Union, Any
-from pathlib import Path
-import sys
-
-# Add project root to Python path to find config
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
-
-from config import RESULTS_PATH
+from .setup import result_path
 
 def print_mode_stats(df: pd.DataFrame) -> None:
     """Print mode choice statistics from a DataFrame containing travel choices.
@@ -85,8 +78,7 @@ def get_config_results(config_name: str) -> Dict[str, str]:
             - mode_{n}: Mode split percentage for mode n
     """
     result = {}
-    results_file = RESULTS_PATH / f"{config_name}_results.csv"
-    with open(results_file, mode="r", newline="", encoding="utf-8") as file:
+    with open(f"{result_path}\\{config_name}_results.csv", mode="r", newline="", encoding="utf-8") as file:
         reader = csv.reader(file)
         next(reader)  # Skip the header row
         for row in reader:

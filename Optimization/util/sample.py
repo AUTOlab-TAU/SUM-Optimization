@@ -1,14 +1,12 @@
 import sys
+import os
 import pandas as pd
-from pathlib import Path
 from typing import Any
 
-# Add project root to Python path to find config
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
+# Add the directory containing setup.py to the sys.path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from config import REQUESTS_FILE
-from .setup import requestfile_ratio, demand_ratio
+from setup import *
 
 def load_request_pool() -> pd.DataFrame:
     """Load and preprocess the pre-generated origin-destination request pool.
@@ -32,7 +30,7 @@ def load_request_pool() -> pd.DataFrame:
             And other mode-specific time and distance columns
     """
     #print(f"Loading all pregenerated OD pairs with rq_time and duration & distance by mode")
-    df = pd.read_csv(REQUESTS_FILE)
+    df = pd.read_csv(f"{requestsfilepath}")
     df["orig_taz"] = df["orig_taz"].astype(int)
     df["dest_taz"] = df["dest_taz"].astype(int)
     df["start"] = df["start"].astype(int)

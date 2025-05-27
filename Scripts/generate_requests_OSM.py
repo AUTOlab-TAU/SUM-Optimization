@@ -16,14 +16,6 @@ from biogeme.expressions import Variable, Beta
 import biogeme.biogeme as bio
 from biogeme import models
 from plotnine import ggplot, aes, geom_line, geom_point, scale_shape_manual, theme_minimal, scale_linetype_manual, scale_size_manual
-from pathlib import Path
-import sys
-
-# Add project root to Python path to find config
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
-
-from config import DEMAND_PATH, REQUESTS_FILE
 
 
 
@@ -165,12 +157,14 @@ nsm_cost_shekels = 8.0
 
 car_ownership_rate = 0.67 # from survey
 
-nodes_df = pd.read_csv(DEMAND_PATH / "fleetpy_node_taz.csv")
+
+inpath = "D:\\users\\davideps\\Jerusalem\\SUM-Optimization\\JerusalemData\\demand\\Processed"
+nodes_df = pd.read_csv(f"{inpath}\\fleetpy_node_taz.csv")
 nodes_df["taz"] = nodes_df["taz"].astype(int)
 taznodes = create_taznodes_dict(nodes_df) #returns dict
 nodes = create_nodes_dict(nodes_df)
 ignore_polys = [4711] # ignore these taz (outside target neighborhood or city, measurement error, etc)
-ods = convert_od_file_to_dict(DEMAND_PATH / "weekday_top15_hourly.csv")
+ods = convert_od_file_to_dict("D:\\users\\davideps\\Jerusalem\\SUM-Optimization\\JerusalemData\\demand\\Processed\\weekday_top15_hourly.csv")
 requests = {}
 
 # Estimate PT compared to car travel (if GTFS is not available)
@@ -271,6 +265,6 @@ for h in range(demand_start_hour,demand_end_hour):
 df = pd.DataFrame.from_dict(requests, orient='index')
 df = df.sort_values(["request_time"])
 df = df.reset_index(drop=True) 
-df.to_csv(REQUESTS_FILE, index=False)
+df.to_csv(f"{inpath}\\requests_fleetpy_nodes_with_nsm_7am9am_scale30x.csv", index=False)
 print(f"trips:{len(df)}")
     
