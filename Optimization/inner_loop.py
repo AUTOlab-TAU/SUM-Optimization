@@ -174,9 +174,7 @@ for i in range(num_iterations):
         df = recalc_nsm_util_and_exp(df,choicestats.get_all_current_smooth(),nsmstats.get_all_current_smooth())
         df = calc_all_probs(df,modes)
 
-        #df.to_csv(fr"{fleetpy_path}\data\demand\jerusalem_demand\matched\jerusalem_osm\i{i:03}_r{r:03}_all_intermediate_demand.csv",index=False)
-
-        # # give some NSM users (those who received service) a chance to switch
+        # give some NSM users (those who received service) a chance to switch
         mask = (df['served'] == 1) #& (np.random.rand(len(df)) < user_can_switch_rate) # these users offered chance to switch
         df.loc[mask,"choice"] = df[mask].apply(select_choice,axis=1)
         df.loc[mask,"modified"] = 1
@@ -184,7 +182,7 @@ for i in range(num_iterations):
         print_mode_stats(df)
 
 
-        # # give some non-NSM users (never requested) a chance to switch
+        # ive some non-NSM users (never requested) a chance to switch
         mask = (df['served'] == -1) #& (np.random.rand(len(df)) < nonuser_can_switch_rate) # these nonusers offered chance to switch
         df.loc[mask,"choice"] = df[mask].apply(select_choice,axis=1)
         df.loc[mask,"modified"] = 1
@@ -274,7 +272,7 @@ for i in range(num_iterations):
         V1 = ASC_BIKE + B_TIME * BIKE_ELEC_TIME  # assumes electric bikes in Jerusalem and no cost
         V2 = ASC_CAR + B_TIME * CAR_TIME + B_COST * CAR_COST    # includes motorcycles
         V3 = ASC_PT + B_TIME * PT_TIME + B_COST * PT_COST       #+ B_MEDIAN_PT + MEDIAN_PT
-        V4 = ASC_NSM + B_TIME * NSM_TOTAL_TIME + B_COST * NSM_COST + B_RISK * NSM_RISK
+        V4 = ASC_NSM + B_TIME * NSM_TOTAL_TIME + B_COST * NSM_COST + B_RISK * NSM_RISK * NSMUSER # estimate B_RISK from travelers who tried to use the NSM
 
         V = {0: V0, 1: V1, 2: V2, 3: V3, 4:V4 } # where 0,1,2,3 are mode choice alternatives
 

@@ -33,12 +33,12 @@ script_dir = os.path.dirname(os.path.abspath(__file__))  # directory of THIS scr
 
 nsmconfig = {
     "config_name":"PLACEHOLDER", # used to name files
-    "op_max_wait_time":300,     # 300 = 5min lead time , 420 = 7min
-    "op_max_detour_time_factor":100,
+    "op_max_wait_time":60,     # 300 = 5min lead time , 420 = 7min
+    "op_max_detour_time_factor":50,
     "op_fleet_composition":"jerusalem_petrol_van_vehtype:20",
-    "nsm_cost":8,# if this is less than or equal to PT cost of 6, NSM requests will soar, requiring higher maxiter and far more time per iteration
+    "nsm_cost":6,# if this is less than or equal to PT cost of 6, NSM requests will soar, requiring higher maxiter and far more time per iteration
     "maxiter":25, # if stop_loop_threshold is not reached, how many iterations to run? depends on reasonableness of initial settings in util\setup.py
-    "reps":2, # how many repetitions per configuration? start low. probably good to keep below #CPUs
+    "reps":10, # how many repetitions per configuration? start low. probably good to keep below #CPUs
     "stop_loop_threshold":0.25, #0.015, #absolute difference in percentage points in NSM usage between iterations
     "make_figures":True # takes time but useful for debugging
     } 

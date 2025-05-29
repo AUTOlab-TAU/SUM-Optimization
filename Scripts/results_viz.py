@@ -2,10 +2,10 @@ import pandas as pd
 from plotnine import ggplot, aes, geom_line, geom_point, scale_shape_manual, theme_minimal, scale_linetype_manual, scale_size_manual, theme, element_rect, labs, element_text, geom_text
 make_figures = True
 
-basepath = 'D:\\users\\davideps\\Jerusalem\\python\\config_results'
-result_path = 'D:\\users\\davideps\\Jerusalem\\python\\config_results\\viz_2025_05_20'
+basepath = 'D:\\users\\davideps\\Jerusalem\\SUM-Optimization-T2.2_Deliverable\\framework_results'
+result_path = 'D:\\users\\davideps\\Jerusalem\\SUM-Optimization-T2.2_Deliverable\\framework_results'
 
-for config_name in ["20_2"]:
+for config_name in ["5_2"]:
     # Read data from CSV files
     choicestats_df = pd.read_csv(f'{basepath}\\{config_name}_choicestats.csv')
     nsmstats_df = pd.read_csv(f'{basepath}\\{config_name}_nsmstats.csv')

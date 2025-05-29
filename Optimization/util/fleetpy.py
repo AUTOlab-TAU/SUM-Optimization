@@ -146,10 +146,23 @@ def get_fleetpy_simdata_allreps(i: int, num_reps: int, basename: str) -> List[pd
         List of DataFrames containing simulation evaluation metrics for each replication
     """
     result = []
+    missing_files = 0
     for r in range(num_reps):
-        print(f"Reading simulation data for iter {i} rep {r}")
-        df = pd.read_csv(f"{fleetpy_path}\\studies\\jerusalem\\results\\{basename}_i{i:03}_r{r:03}\\standard_eval.csv",skiprows=1,header=None) #ignores column names, permits numerical indexing of columns
-        result.append(df)
+        file_path = f"{fleetpy_path}\\studies\\jerusalem\\results\\{basename}_i{i:03}_r{r:03}\\standard_eval.csv"
+        try:
+            print(f"Reading simulation data for iter {i} rep {r}")
+            df = pd.read_csv(file_path, skiprows=1, header=None)  # ignores column names, permits numerical indexing of columns
+            result.append(df)
+        except (FileNotFoundError, pd.errors.EmptyDataError) as e:
+            error_type = "Missing" if isinstance(e, FileNotFoundError) else "Empty"
+            print(f"Warning: {error_type} evaluation file for iter {i} rep {r}")
+            missing_files += 1
+            continue
+    
+    # Check if too many files are missing
+    if missing_files > num_reps / 4:
+        raise RuntimeError(f"Too many missing/empty evaluation files: {missing_files} out of {num_reps} files missing (threshold: {num_reps/4})")
+    
     return result
 
 
@@ -202,9 +215,21 @@ def update_requests_fleetpy_users_served(i: int, r: int, scenario_basename: str)
     """
     # key = fleetpy column name
     # value = simulation-optimization framework column name
-    alltrav = pd.read_csv(f"{workpath}\\i{i:03}_r{r:03}_all_presim_demand.csv")
-    requests = pd.read_csv(f"{fleetpy_path}\\studies\\jerusalem\\results\\{scenario_basename}_i{i:03}_r{r:03}\\1_user-stats.csv")
+    try:
+        alltrav = pd.read_csv(f"{workpath}\\i{i:03}_r{r:03}_all_presim_demand.csv")
+        requests = pd.read_csv(f"{fleetpy_path}\\studies\\jerusalem\\results\\{scenario_basename}_i{i:03}_r{r:03}\\1_user-stats.csv")
+    except FileNotFoundError as e:
+        print(f"Warning: Missing file for iter {i} rep {r}: {str(e)}")
+        return None
+    except pd.errors.EmptyDataError:
+        print(f"Warning: Empty file for iter {i} rep {r}")
+        return None
+
     results = requests.dropna(subset=["pickup_time"]).copy() # requests FleetPy served
+    if len(results) == 0:
+        print(f"Warning: No completed requests found for iter {i} rep {r}")
+        return alltrav
+
     results.loc[:, "nsm_wait_time"] = results.loc[:,"pickup_time"] - results.loc[:,"rq_time"]
     results.loc[:, "nsm_travel_time"] = results.loc[:,"dropoff_time"] - results.loc[:,"pickup_time"]
     results.loc[:, "nsm_total_time"] = results.loc[:,"nsm_wait_time"] + results.loc[:,"nsm_travel_time"]
