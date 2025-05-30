@@ -4,7 +4,8 @@ from statistics import mean, stdev
 import math
 from typing import Dict, List, Any, Union
 from .dcacalc import reasign_unserved_requests
-from .setup import workpath, fleetpy_path
+from config import WORKSPACE_PATH, FLEETPY_PATH, FLEETPY_RESULTS_PATH
+import os
 
 
 def get_fleetpy_params(inner_loop_config: Dict[str, Any]) -> Dict[str, Any]:
@@ -148,7 +149,7 @@ def get_fleetpy_simdata_allreps(i: int, num_reps: int, basename: str) -> List[pd
     result = []
     missing_files = 0
     for r in range(num_reps):
-        file_path = f"{fleetpy_path}\\studies\\jerusalem\\results\\{basename}_i{i:03}_r{r:03}\\standard_eval.csv"
+        file_path = os.path.join(FLEETPY_RESULTS_PATH, f"{basename}_i{i:03}_r{r:03}", "standard_eval.csv")
         try:
             print(f"Reading simulation data for iter {i} rep {r}")
             df = pd.read_csv(file_path, skiprows=1, header=None)  # ignores column names, permits numerical indexing of columns
@@ -216,8 +217,8 @@ def update_requests_fleetpy_users_served(i: int, r: int, scenario_basename: str)
     # key = fleetpy column name
     # value = simulation-optimization framework column name
     try:
-        alltrav = pd.read_csv(f"{workpath}\\i{i:03}_r{r:03}_all_presim_demand.csv")
-        requests = pd.read_csv(f"{fleetpy_path}\\studies\\jerusalem\\results\\{scenario_basename}_i{i:03}_r{r:03}\\1_user-stats.csv")
+        alltrav = pd.read_csv(os.path.join(WORKSPACE_PATH, f"i{i:03}_r{r:03}_all_presim_demand.csv"))
+        requests = pd.read_csv(os.path.join(FLEETPY_RESULTS_PATH, f"{scenario_basename}_i{i:03}_r{r:03}", "1_user-stats.csv"))
     except FileNotFoundError as e:
         print(f"Warning: Missing file for iter {i} rep {r}: {str(e)}")
         return None

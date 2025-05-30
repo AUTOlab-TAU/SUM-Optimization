@@ -7,10 +7,10 @@ import osmnx as ox
 import networkx as nx
 import importlib.util
 import sys
+from config import FLEETPY_PATH
 
 # Absolute path to FleetPy (may not be necessary depending on your setup)
-basepath = "D:\\users\\davideps\\Jerusalem\\python\\FleetPy"
-filepath = f"{basepath}\\src\\preprocessing\\networks\\extractors\\osm_converter.py"
+filepath = os.path.join(FLEETPY_PATH, "src", "preprocessing", "networks", "extractors", "osm_converter.py")
 
 # Load the module
 spec = importlib.util.spec_from_file_location("FleetPy", filepath)

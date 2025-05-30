@@ -2,6 +2,7 @@ import sys
 import os
 import pandas as pd
 from typing import Any
+from config import REQUESTS_FILE_PATH
 
 # Add the directory containing setup.py to the sys.path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -30,7 +31,7 @@ def load_request_pool() -> pd.DataFrame:
             And other mode-specific time and distance columns
     """
     #print(f"Loading all pregenerated OD pairs with rq_time and duration & distance by mode")
-    df = pd.read_csv(f"{requestsfilepath}")
+    df = pd.read_csv(REQUESTS_FILE_PATH)
     df["orig_taz"] = df["orig_taz"].astype(int)
     df["dest_taz"] = df["dest_taz"].astype(int)
     df["start"] = df["start"].astype(int)

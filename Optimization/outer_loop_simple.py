@@ -18,15 +18,11 @@
 #                           since the delta is 0.09%, the inner loop will stop and the threshold_triggered flag
 #                           will be set to true in the configuration results CSV.
 
-
-
-
-
 import sys
 import json
 import subprocess
 import os
-from util.setup import result_path
+from config import *
 from util.util import get_config_results
 
 script_dir = os.path.dirname(os.path.abspath(__file__))  # directory of THIS script (inner_loop.py must be in same)
@@ -39,11 +35,11 @@ nsmconfig = {
     "nsm_cost":6,# if this is less than or equal to PT cost of 6, NSM requests will soar, requiring higher maxiter and far more time per iteration
     "maxiter":25, # if stop_loop_threshold is not reached, how many iterations to run? depends on reasonableness of initial settings in util\setup.py
     "reps":10, # how many repetitions per configuration? start low. probably good to keep below #CPUs
-    "stop_loop_threshold":0.25, #0.015, #absolute difference in percentage points in NSM usage between iterations
+    "stop_loop_threshold":0.05, #0.015 for more confidence of convergence, measured in percentage points in NSM usage between iterations
     "make_figures":True # takes time but useful for debugging
     } 
 
-for fleet_size in [5]:
+for fleet_size in [20]:
     for nsm_cost in [2]:
 
         # modify the basic configuration
@@ -55,7 +51,7 @@ for fleet_size in [5]:
         
         # run the inner loop
         print(f"Outer loop calling inner loop for configuration: {config_name}")
-        command = [sys.executable, f'{script_dir}\\inner_loop.py','--config',nsmconfig_text]
+        command = [sys.executable, os.path.join(script_dir, 'inner_loop.py'), '--config', nsmconfig_text]
         this_process = subprocess.run(command,capture_output=False, text=True) # write inner_loop text to screen
         #this_process = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # ignore inner_loop text
 

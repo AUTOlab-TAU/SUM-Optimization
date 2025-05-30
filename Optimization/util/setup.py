@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import Dict, List, Union, Any
+from config import *
 
 class StatGroup:
     """Maintains running statistics with exponential smoothing for simulation parameters.
@@ -96,17 +97,9 @@ class StatGroup:
                 temp.append({'iter': i, 'stat': stat, 'value': value, 'smoothed': smoothed, 'pval': pval})
         return pd.DataFrame(temp)
 
-# Paths for data and configuration files
-basepath: str = "D:\\users\\davideps\\Jerusalem"
-workpath: str = f"{basepath}\\SUM-Optimization-T2.2_Deliverable\\temp_workspace"
-result_path: str = f"{basepath}\\SUM-Optimization-T2.2_Deliverable\\framework_results"
-fleetpy_path: str = f"{basepath}\\SUM-Optimization-T2.2_Deliverable\\FleetPy_2024"
-fleetpy_demand_path: str = f"{fleetpy_path}\\data\\demand\\jerusalem_demand\\matched\\jerusalem_osm"
-requestsfilepath: str = f"{basepath}\\SUM-Optimization-T2.2_Deliverable\\JerusalemData\demand\Processed\\requests_fleetpy_nodes_with_nsm_7am9am_scale15x_focus_area.csv"
-requestfile_ratio: float = 15.10924  # 2.0=twice the Deccell volume
-
 # Simulation parameters
-demand_ratio: float = 1.252 # survey volume  # 1.0 = original Decell dataset volume
+requestfile_ratio: float = 15.10924  # Ratio of requests in sample frame over base demand
+demand_ratio: float = 0.5 #1.252 #1.252 = survey volume  # 1.0 = original Decell dataset volume # this is for convenient scaling
 weight_alpha: float = 0.25  # Smoothing weight for statistics
 
 # Cost parameters

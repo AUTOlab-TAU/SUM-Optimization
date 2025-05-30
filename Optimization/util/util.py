@@ -1,7 +1,8 @@
 import pandas as pd
 import csv
 from typing import Dict, Union, Any
-from .setup import result_path
+from config import RESULT_PATH
+import os
 
 def print_mode_stats(df: pd.DataFrame) -> None:
     """Print mode choice statistics from a DataFrame containing travel choices.
@@ -78,7 +79,7 @@ def get_config_results(config_name: str) -> Dict[str, str]:
             - mode_{n}: Mode split percentage for mode n
     """
     result = {}
-    with open(f"{result_path}\\{config_name}_results.csv", mode="r", newline="", encoding="utf-8") as file:
+    with open(os.path.join(RESULT_PATH, f"{config_name}_results.csv"), mode="r", newline="", encoding="utf-8") as file:
         reader = csv.reader(file)
         next(reader)  # Skip the header row
         for row in reader:
